@@ -38,11 +38,40 @@ db.users.find().limit(5).sort({age: -1})         // sort by age, descending, lim
 ```
 
 ### dodatkowo przydatne operatory
-```$eq, $ne, $gt, $gte, $lt, $lte, $in, $nin```
+#### operatory porównania
+- $eq – equal
+- $ne – different
+- $gt – greater than
+- $gte – greater than or equal
+- $lt – less than
+- $lte – less than or equal
+#### operatory logiczne
+- $and
+- $or
+- $not
+- $nor
 
+na przykład
+```javascript
+db.customers.find({
+  $and: [
+    { registration_date: { $gt: "2021-12-31" } },
+    { orders: { $ne: [] } },
+    {
+      $nor: [
+        { "address.country": "France" },
+        { "address.country": "Austria" }
+      ]
+    }
+  ]
+});
+```
+* `find()` domyślnie zwraca maksymalnie 20 dokumentów w shellu. Użyj `.toArray()` lub `.pretty()` dla pełnego wyniku.
+* Użycie operatorów logicznych i porównawczych pozwala tworzyć bardzo precyzyjne zapytania.
+* Kwerendy mogą być zagnieżdżane i łączone.
 
  
-## 4. Aktualizacja dokumentów
+## 4. Aktualizacja dokumentów - update 
 ```javascript
 db.users.updateOne(
   {name: "Jan"},
@@ -55,12 +84,44 @@ db.users.updateMany(
 )
 
 ```
+### operatory aktualizacji
+- $set – setting new field values
+- $inc – incrementing (or decrementing) numeric values
+- $push – adding an element to an array
+- $pull – removing elements from an array
+
+w tym przykładzie podany dokument zastępuje cały dokument pod indeksem 7.
+```javascript
+db.customers.replaceOne(
+  { source_id: 7 },
+  {
+    source_id: 7,
+    first_name: "Natalia",
+    last_name: "Szara",
+    email: "natalia.szara@example.com",
+    registration_date: "2025-05-28 10:00:00",
+    address: {
+      street: "Nowa 123",
+      city: "Kraków",
+      zip_code: "31-000",
+      country: "Polska"
+    },
+    orders: []
+  }
+);
+```
+* `deleteOne()` przyjmuje ten sam filtr co `find()` – usuwa pierwszy pasujący dokument.
+* `deleteMany()` może usunąć wiele dokumentów – warto stosować ostrożnie.
+
+
 
 ## 5. Usuwanie kolekcji
 ```javascript
 db.users.deleteOne({name: "Jan"})
 db.users.deleteMany({age: {$gt: 40}})
 ```
+* deleteOne() przyjmuje ten sam filtr co find() – usuwa pierwszy pasujący dokument.
+* deleteMany() może usunąć wiele dokumentów – warto stosować ostrożnie.
 
 ## 6. Wszystkich ukochana agregacja
 ```javascript
@@ -71,8 +132,21 @@ db.users.aggregate([
 
 ```
 ### Przy aggregate wszystkie zadania można rozwiazać wykorzystując poniższe zapytania:
-`$unwind, $group, $project, $match, $sort, $limit, itd.`
+- $unwind,
+- $group,
+- $project,
+- $match,
+- $sort,
+- $limit,
+  
+itd.
 
+### ważne!!
+* Etapy agregacji wykonują się w kolejności – każdy operuje na wynikach poprzedniego.
+* Można łączyć wiele etapów w jednym pipeline.
+* Wydajne agregacje często wykorzystują indeksy w pierwszym etapie `$match`.
+
+Więcej zaawansowanych przykładów można uzyskać przez połączenie `$match`, `$group`, `$project` i `$unwind` w jednym zapytaniu.
 
 2 problematyczne przykłady z zajęć wytłumaczone;
 ```javascript
